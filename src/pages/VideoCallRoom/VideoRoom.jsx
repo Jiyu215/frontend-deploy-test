@@ -233,7 +233,7 @@ const VideoRoom = () =>{
         setListOpen(!listOpen);
     }
     
-    const wsServerUrl = "3.37.243.109";
+    const wsServerUrl = "ws://3.37.243.109:8080";
     const ws = useRef(null);  // 웹소켓 연결을 위한 ref    
 
     const handleUserDataChange = (data) => {
