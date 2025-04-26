@@ -233,7 +233,7 @@ const VideoRoom = () =>{
         setListOpen(!listOpen);
     }
     
-    const wsServerUrl = "wss://vtestmo.kro.kr/call";
+    const wsServerUrl = "wss://vmotest.kro.kr/call";
     const ws = useRef(null);  // 웹소켓 연결을 위한 ref    
 
     const handleUserDataChange = (data) => {
