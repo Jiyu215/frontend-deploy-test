@@ -523,6 +523,8 @@ const VideoRoom = () =>{
     const iceServers = {
         iceServers: [
           { urls: "stuns:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
           {
             urls: "turn:vmo.o-r.kr:3478",
             username: "user",
@@ -590,7 +592,7 @@ const VideoRoom = () =>{
                 participant.getVideoElement().srcObject = stream;
                 console.log("stream:",stream);
                     var options = {
-                        configuration: iceServers,
+                        configuration: {iceServers: iceServers},
                         localVideo: participant.getVideoElement(),
                         mediaConstraints: constraints,
                         onicecandidate: participant.onIceCandidate.bind(participant)
@@ -770,7 +772,7 @@ const VideoRoom = () =>{
         }
 
         let options = {
-            configuration: iceServers,
+            configuration: {iceServers: iceServers},
             remoteVideo: participant.getVideoElement(),
             onicecandidate: participant.onIceCandidate.bind(participant)
         }
