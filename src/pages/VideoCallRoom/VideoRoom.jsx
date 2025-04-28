@@ -576,7 +576,7 @@ const VideoRoom = () =>{
                         onicecandidate: participant.onIceCandidate.bind(participant)
                     };
         
-                    participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
+                    participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options,
                         function (error) {
                             if (error) {
                                 console.error(error);
@@ -754,7 +754,7 @@ const VideoRoom = () =>{
             onicecandidate: participant.onIceCandidate.bind(participant)
         }
         
-        participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options,
+        participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options,
 			function (error) {
                 if(error) { 
                     return console.error(error); 
