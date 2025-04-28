@@ -522,7 +522,7 @@ const VideoRoom = () =>{
 
     const iceServers = {
         iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stuns:stun.l.google.com:19302" },
           {
             urls: "turn:vmo.o-r.kr:3478",
             username: "user",
