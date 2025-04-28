@@ -582,6 +582,19 @@ const VideoRoom = () =>{
                                 console.error(error);
                                 return;
                             }
+                             // 👉 ICE 상태 추적 이벤트 추가
+                            this.peerConnection.addEventListener("iceconnectionstatechange", () => {
+                                console.log("ICE 상태 변경:", this.peerConnection.iceConnectionState);
+                                if (this.peerConnection.iceConnectionState === "failed") {
+                                    console.error("🔴 ICE 연결 실패!");
+                                } else if (this.peerConnection.iceConnectionState === "disconnected") {
+                                    console.warn("🟠 ICE 연결 끊김");
+                                } else if (this.peerConnection.iceConnectionState === "closed") {
+                                    console.warn("🟣 ICE 연결 종료됨");
+                                } else if (this.peerConnection.iceConnectionState === "connected") {
+                                    console.log("🟢 ICE 연결 성공!");
+                                }
+                            });
                             this.generateOffer(participant.offerToReceiveVideo.bind(participant));
     
                             // 스트림을 받은 후 비디오와 오디오 트랙을 즉시 활성화
@@ -622,6 +635,13 @@ const VideoRoom = () =>{
             })
             .catch(function (error) {
                 console.error("Error accessing media devices:", error);
+                if (error.name === 'NotFoundError') {
+                    console.error("카메라 또는 마이크를 찾을 수 없음");
+                } else if (error.name === 'NotAllowedError') {
+                    console.error("사용자가 권한을 거부함");
+                } else {
+                    console.error("기타 오류:", error);
+                }
             });
     };
 
@@ -739,6 +759,20 @@ const VideoRoom = () =>{
                 if(error) { 
                     return console.error(error); 
                 }
+
+                // 👉 ICE 상태 추적 이벤트 추가
+                this.peerConnection.addEventListener("iceconnectionstatechange", () => {
+                    console.log("ICE 상태 변경:", this.peerConnection.iceConnectionState);
+                    if (this.peerConnection.iceConnectionState === "failed") {
+                        console.error("🔴 ICE 연결 실패!");
+                    } else if (this.peerConnection.iceConnectionState === "disconnected") {
+                        console.warn("🟠 ICE 연결 끊김");
+                    } else if (this.peerConnection.iceConnectionState === "closed") {
+                        console.warn("🟣 ICE 연결 종료됨");
+                    } else if (this.peerConnection.iceConnectionState === "connected") {
+                        console.log("🟢 ICE 연결 성공!");
+                    }
+                });
                 this.generateOffer(participant.offerToReceiveVideo.bind(participant));
                 
                 // 오디오 감지를 위해 스트림 할당 대기
