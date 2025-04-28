@@ -517,6 +517,19 @@ const VideoRoom = () =>{
     useEffect(()=>{
         console.log("creatorData:",creatorData);
     },[creatorData]);
+
+    //trun 서버 연결
+
+    const iceServers = {
+        iceServers: [
+          {
+            urls: "turn:vmo.o-r.kr:3478",
+            username: "user",
+            credential: "1234abcd"
+          }
+        ]
+      };
+      
     
     const sendExistingUsers = (msg) => {
 
@@ -571,6 +584,7 @@ const VideoRoom = () =>{
                 participant.getVideoElement().srcObject = stream;
                 console.log("stream:",stream);
                     var options = {
+                        configuration: iceServers,
                         localVideo: participant.getVideoElement(),
                         mediaConstraints: constraints,
                         onicecandidate: participant.onIceCandidate.bind(participant)
@@ -750,6 +764,7 @@ const VideoRoom = () =>{
         }
 
         let options = {
+            configuration: iceServers,
             remoteVideo: participant.getVideoElement(),
             onicecandidate: participant.onIceCandidate.bind(participant)
         }
