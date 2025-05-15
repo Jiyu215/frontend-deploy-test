@@ -10,8 +10,8 @@ import { message } from "antd";
 
 //Participant 클래스 정의
 class Participant{
-    constructor(userId, userName, sendMessage, isMainVideo, videoOn, audioOn){
-        this.userId = userId;
+    constructor(sessionId, userName, sendMessage, isMainVideo, videoOn, audioOn){
+        this.sessionId = sessionId;
         this.userName = userName;
         this.rtcPeer = null;
         this.sendMessage = sendMessage;
@@ -31,7 +31,7 @@ class Participant{
         const audioOff = document.createElement('span'); // 오디오 꺼짐 표시
         const emojiContainer = document.createElement('div'); // 이모지 컨테이너 추가
 
-        container.id = userId;
+        container.id = sessionId;
         videoContainer.id = 'video-container';
 
         container.appendChild(videoContainer);
@@ -49,7 +49,7 @@ class Participant{
 
         span.appendChild(document.createTextNode(userName));
 
-        video.id = 'video-' + userId;
+        video.id = 'video-' + sessionId;
         video.autoplay = true;
         video.controls = false;
 
@@ -71,7 +71,7 @@ class Participant{
             mainVideoContainer.appendChild(container);
         });
 
-        emojiContainer.id = 'emoji-' + userId; // 이모지 컨테이너에 id 추가
+        emojiContainer.id = 'emoji-' + sessionId; // 이모지 컨테이너에 id 추가
         audioOff.classList.add('audio-off'); // 클래스 이름 추가
         audioOff.style.display = this.audioOn ? 'none' : 'block';
 
@@ -128,7 +128,7 @@ class Participant{
 
 		var msg =  { 
                 eventId : "receiveVideoFrom",
-				userId : this.userId,
+				sessionId : this.sessionId,
 				sdpOffer : offerSdp
 		};
         console.log("오퍼 전송 메시지:", msg); // 전송할 메시지 확인용 로그
@@ -138,7 +138,7 @@ class Participant{
     onIceCandidate = (candidate, wp) => {
         const message = {
             eventId: 'onIceCandidate',
-            userId: this.userId,
+            sessionId: this.sessionId,
             candidate: candidate,
         }
 
@@ -158,9 +158,9 @@ const VideoRoom = () =>{
     const location = useLocation();
     const action = location.state?.action;
 
-    const [userData, setUserData] = useState({userId:"", userName: "", roomId: "", videoOn: true, audioOn: true }); // 백엔드에서 받은 사용자 데이터 저장
-    const [prevUserData, setPrevUserData] = useState({ userId:"", userName: "", roomId: "", videoOn: true, audioOn: true }); // 대기실 사용자 데이터(이전 데이터)
-    const [creatorData, setCreatorData] = useState({userId:"", userName: ""});
+    const [userData, setUserData] = useState({sessionId:"", userName: "", roomId: "", videoOn: true, audioOn: true }); // 백엔드에서 받은 사용자 데이터 저장
+    const [prevUserData, setPrevUserData] = useState({ sessionId:"", userName: "", roomId: "", videoOn: true, audioOn: true }); // 대기실 사용자 데이터(이전 데이터)
+    const [creatorData, setCreatorData] = useState({sessionId:"", userName: ""});
     const [participants, setParticipants] = useState({}); // 참가자 목록을 상태로 관리
     const userDataRef = useRef(userData); //내 정보 참조
 
@@ -270,8 +270,8 @@ const VideoRoom = () =>{
           const sorted = [...speakingOrder.slice(1), ...remaining.filter(id => !speakingOrder.includes(id))];
       
           // 슬라이더 초기화
-          sorted.forEach(userId => {
-            const elem = participants[userId]?.getElement();
+          sorted.forEach(sessionId => {
+            const elem = participants[sessionId]?.getElement();
             if (elem && elem.parentElement !== sliderBox) {
               sliderBox.appendChild(elem);
             } else if (elem) {
@@ -285,7 +285,7 @@ const VideoRoom = () =>{
 
     useEffect(() => {
         userDataRef.current = { ...userData };
-        const stream = document.getElementById(`video-${userDataRef.current.userId}`)?.srcObject;
+        const stream = document.getElementById(`video-${userDataRef.current.sessionId}`)?.srcObject;
         console.log("stream",stream);
         if (stream) {
             // 비디오 트랙 활성화/비활성화
@@ -465,7 +465,7 @@ const VideoRoom = () =>{
             try {
                 const parsed = JSON.parse(participantInfo);
                 return {
-                    userId: parsed.userId,
+                    sessionId: parsed.sessionId,
                     userName: parsed.userName,
                     audioOn: parsed.audioOn === "true",
                     videoOn: parsed.videoOn === "true"
@@ -478,7 +478,7 @@ const VideoRoom = () =>{
     
         // 이미 객체이면 그대로 필드 꺼내기
         return {
-            userId: participantInfo.userId,
+            sessionId: participantInfo.sessionId,
             userName: participantInfo.userName,
             audioOn: typeof participantInfo.audioOn === 'string' ? participantInfo.audioOn === "true" : !!participantInfo.audioOn,
             videoOn: typeof participantInfo.videoOn === 'string' ? participantInfo.videoOn === "true" : !!participantInfo.videoOn
@@ -488,11 +488,11 @@ const VideoRoom = () =>{
 
     //방 생성 후, 백엔드 메시지 받기
     const roomCreated = (response) => {
-        const {userId,roomId, userName, videoOn, audioOn} = response;
+        const {sessionId,roomId, userName, videoOn, audioOn} = response;
 
         setUserData({
             ...userDataRef.current,
-            userId: userId,
+            sessionId: sessionId,
             roomId: roomId,
             userName: userName,
             videoOn: videoOn,
@@ -543,7 +543,7 @@ const VideoRoom = () =>{
          
         setCreatorData({
             ...creatorData,
-            userId: msg.roomLeaderId,
+            sessionId: msg.roomLeaderId,
             userName: msg.roomLeaderName
         });
 
@@ -554,10 +554,10 @@ const VideoRoom = () =>{
             { message: `${msg.userName}님이 방에 입장하셨습니다.` }
         ]);
         
-        if(!userDataRef.current.userId || userDataRef.current.userId === ''){
+        if(!userDataRef.current.sessionId || userDataRef.current.sessionId === ''){
             setUserData({
                 ...userDataRef.current,
-                userId: msg.userId,
+                sessionId: msg.sessionId,
                 userName: msg.userName
             });
         }
@@ -568,20 +568,20 @@ const VideoRoom = () =>{
         };
 
         // 새 참가자에 대한 참가자 객체 생성
-        let participant = new Participant(msg.userId, msg.userName, sendMessage, isMainVideo, userDataRef.current.videoOn, userDataRef.current.audioOn);
+        let participant = new Participant(msg.sessionId, msg.userName, sendMessage, isMainVideo, userDataRef.current.videoOn, userDataRef.current.audioOn);
 
         setParticipants(prevParticipants => {
-            const updatedParticipants = { ...prevParticipants, [msg.userId]: participant };
+            const updatedParticipants = { ...prevParticipants, [msg.sessionId]: participant };
             console.log("새 참가자 추가 후 참가자 상태:", updatedParticipants);
 
-            participants[msg.userId] = participant;
+            participants[msg.sessionId] = participant;
             return updatedParticipants;
         });
         
         // 미디어 스트림을 받아오는 로직
         navigator.mediaDevices.getUserMedia(constraints)
             .then((stream) => {
-                if (msg.userId === userDataRef.current.userId) {
+                if (msg.sessionId === userDataRef.current.sessionId) {
                     streamRef.current = stream;
                     console.log("✅ 내 스트림 저장 완료:", stream);
                 }        
@@ -636,7 +636,7 @@ const VideoRoom = () =>{
 
                                 videoElement.onloadedmetadata = () => {
                                     const stream = videoElement.srcObject;
-                                    startAudioDetection(participant.userId, stream); // ✅ 감지 시작
+                                    startAudioDetection(participant.sessionId, stream); // ✅ 감지 시작
                                 };
                             }
                         });
@@ -666,9 +666,9 @@ const VideoRoom = () =>{
             });
     };
 
-    const startAudioDetection = (userId, stream) => {
+    const startAudioDetection = (sessionId, stream) => {
         // 오디오가 켜져 있을 경우에만 소리 감지 시작
-        if (!audioDetectionState[userId]) {
+        if (!audioDetectionState[sessionId]) {
             const microphone = audioContext.createMediaStreamSource(stream);
             const analyserNode = audioContext.createAnalyser();
             analyserNode.fftSize = 256;
@@ -677,7 +677,7 @@ const VideoRoom = () =>{
 
             microphone.connect(analyserNode);
 
-            audioDetectionState[userId] = {
+            audioDetectionState[sessionId] = {
                 microphone,
                 analyserNode,
                 dataArray,
@@ -686,21 +686,21 @@ const VideoRoom = () =>{
             };
 
             //소리 감지 함수 호출
-            detectAudioActivity(userId);
+            detectAudioActivity(sessionId);
         }
     };
         
     // 소리 감지하는 함수
-    const detectAudioActivity = (userId) => {
+    const detectAudioActivity = (sessionId) => {
         // participants 객체에서 해당 userId를 가진 참가자 찾기
-        const participant = participants[userId];
+        const participant = participants[sessionId];
         
         if (!participant) {
-            console.warn("해당 참가자가 존재하지 않아 음성인식을 종료합니다", userId);
+            console.warn("해당 참가자가 존재하지 않아 음성인식을 종료합니다", sessionId);
             return; // 참가자가 없으면 함수를 종료
         }
 
-        const { analyserNode, dataArray, bufferLength } = audioDetectionState[userId];
+        const { analyserNode, dataArray, bufferLength } = audioDetectionState[sessionId];
         analyserNode.getByteFrequencyData(dataArray); // 주파수 데이터 가져오기
 
         let sum = 0;
@@ -713,36 +713,36 @@ const VideoRoom = () =>{
         const isSpeaking = average > 10; // 이 값을 기준으로 말을 하고 있다고 판단
 
         // 참가자가 말을 하고 있으면 콘솔에 출력
-        if (isSpeaking && !audioDetectionState[userId].isSpeaking) {
-            audioDetectionState[userId].isSpeaking = true;
-            console.log(`${participants[userId].userName}님이 말을 하고 있습니다.`);
+        if (isSpeaking && !audioDetectionState[sessionId].isSpeaking) {
+            audioDetectionState[sessionId].isSpeaking = true;
+            console.log(`${participants[sessionId].userName}님이 말을 하고 있습니다.`);
             setSpeakingOrder(prev => {
-                if (!prev.includes(userId)) {
-                    return [...prev, userId];
+                if (!prev.includes(sessionId)) {
+                    return [...prev, sessionId];
                 }
                 return prev;
             });
         
 
-        } else if (!isSpeaking && audioDetectionState[userId].isSpeaking) {
-            audioDetectionState[userId].isSpeaking = false;
-            console.log(`${participants[userId].userName}님이 말을 하고 있지 않습니다.`);
+        } else if (!isSpeaking && audioDetectionState[sessionId].isSpeaking) {
+            audioDetectionState[sessionId].isSpeaking = false;
+            console.log(`${participants[sessionId].userName}님이 말을 하고 있지 않습니다.`);
 
-            setSpeakingOrder(prev => prev.filter(id => id !== userId));
+            setSpeakingOrder(prev => prev.filter(id => id !== sessionId));
         }
 
         // 계속 감지
-        requestAnimationFrame(() => detectAudioActivity(userId));
+        requestAnimationFrame(() => detectAudioActivity(sessionId));
     };
 
     const receiveVideoResponse = (result) => {
-        participants[result.userId].rtcPeer.processAnswer(result.sdpAnswer, function (error) {
+        participants[result.sessionId].rtcPeer.processAnswer(result.sdpAnswer, function (error) {
             if (error) return console.error (error);
         });
     }
 
     const onIceCandidate = (result) => {
-        participants[result.userId].rtcPeer.addIceCandidate(result.candidate, function (error) {
+        participants[result.sessionId].rtcPeer.addIceCandidate(result.candidate, function (error) {
 	        if (error) {
 		      console.error("Error adding candidate: " + error);
 		      return;
@@ -754,17 +754,17 @@ const VideoRoom = () =>{
     const receiveVideo = (sender) => {
         console.log("방참가join",sender);
 
-        let participant = participants[sender.userId];
+        let participant = participants[sender.sessionId];
         let isMainVideo = Object.keys(participants).length === 0; // 참가자가 없으면 첫 번째 참가자
         
         if (!participant) {
             // 존재하지 않으면 새로 생성
-            participant = new Participant(sender.userId, sender.userName, sendMessage, isMainVideo, sender.videoOn, sender.audioOn);
+            participant = new Participant(sender.sessionId, sender.userName, sendMessage, isMainVideo, sender.videoOn, sender.audioOn);
             setParticipants(prevParticipants => {
-                const updatedParticipants = { ...prevParticipants, [sender.userId]: participant };
+                const updatedParticipants = { ...prevParticipants, [sender.sessionId]: participant };
                 console.log("새 참가자 추가 후 참가자 상태:", updatedParticipants);
     
-                participants[sender.userId] = participant;
+                participants[sender.sessionId] = participant;
                 return updatedParticipants;
             });
             // participants[sender.userId] = participant;
@@ -803,7 +803,7 @@ const VideoRoom = () =>{
                 const videoElement = participant.getVideoElement();
                 videoElement.onloadedmetadata = () => {
                     const stream = videoElement.srcObject;
-                    startAudioDetection(participant.userId, stream); // ✅ 감지 시작
+                    startAudioDetection(participant.sessionId, stream); // ✅ 감지 시작
                 };
         });
     }
@@ -817,7 +817,7 @@ const VideoRoom = () =>{
 
         const message = {
             eventId: 'sendChat',
-            senderId: userData.userId,
+            senderId: userData.sessionId,
             receiverId: selectUser, // 또는 특정 사용자 ID로 변경 가능
             message: sendChat,
             isSendToAll: (selectUser === "ALL") ? true : false
@@ -825,7 +825,7 @@ const VideoRoom = () =>{
 
         setChatMessages(prevMessages => [
             ...prevMessages,
-            { senderId: userData.userId, senderName: userData.userName, message: sendChat, isSendToAll: message.isSendToAll }
+            { senderId: userData.sessionId, senderName: userData.userName, message: sendChat, isSendToAll: message.isSendToAll }
         ]);
 
         sendMessage(message);
@@ -840,17 +840,17 @@ const VideoRoom = () =>{
 
         const message = {
             eventId: 'sendEmoji',
-            senderId: userData.userId,
+            senderId: userData.sessionId,
             receiverId: selectUser,
             emoji:sendEmoji,
-            isSendToAll: (selectUser === userData.userId) ? true : false
+            isSendToAll: (selectUser === userData.sessionId) ? true : false
         }
 
         showEmojis(message.receiverId, sendEmoji);
 
         setEmojiMessages(prevMessages => [
             ...prevMessages,
-            { senderId: userData.userId, senderName:userData.userName, emoji: message.emoji, isSendToAll: message.isSendToAll }
+            { senderId: userData.sessionId, senderName:userData.userName, emoji: message.emoji, isSendToAll: message.isSendToAll }
         ]);
 
         sendMessage(message);
@@ -862,7 +862,7 @@ const VideoRoom = () =>{
         const { senderId, senderName, message, isSendToAll } = receiveChat;
 
         // 내가 보낸 메시지는 수신하지 않도록 조건 추가
-        if (senderId === userDataRef.current.userId) {
+        if (senderId === userDataRef.current.sessionId) {
             return; // 내 메시지는 렌더링하지 않음
         }
 
@@ -879,7 +879,7 @@ const VideoRoom = () =>{
         
 
         // 내가 보낸 메시지는 수신하지 않도록 조건 추가
-        if (senderId === userDataRef.current.userId) {
+        if (senderId === userDataRef.current.sessionId) {
             return; // 내 메시지는 렌더링하지 않음
         }
         
@@ -940,7 +940,7 @@ const VideoRoom = () =>{
     const exitRoom = () => {
         const message = {
             eventId: 'exitRoom',
-            userId: userDataRef.userId
+            sessionId: userDataRef.sessionId
         };
         
         sendMessage(message);
@@ -948,12 +948,12 @@ const VideoRoom = () =>{
     }
 
     const userLeft = (request) => {
-        let participant = participants[request.userId];  // 참가자 정보를 먼저 찾기
+        let participant = participants[request.sessionId];  // 참가자 정보를 먼저 찾기
         
         if (participant) {  // 참가자가 존재하는 경우에만 처리   
-            const participantDiv = document.getElementById(request.userId);  // 참가자 div 찾기
-            const videoElement = document.getElementById(`video-${request.userId}`);  // 참가자 비디오 요소 찾기
-            const optionElement = document.querySelector(`#userSelect option[value='${request.userId}']`);
+            const participantDiv = document.getElementById(request.sessionId);  // 참가자 div 찾기
+            const videoElement = document.getElementById(`video-${request.sessionId}`);  // 참가자 비디오 요소 찾기
+            const optionElement = document.querySelector(`#userSelect option[value='${request.sessionId}']`);
 
             // 채팅에 사용자 나감 메시지 추가
             setUserEvents(prevEventMessage => [
@@ -965,7 +965,7 @@ const VideoRoom = () =>{
             participant.dispose();
     
             // 참가자 목록에서 해당 참가자 제거
-            delete participants[request.userId];
+            delete participants[request.sessionId];
 
             // 해당 참가자의 DOM 요소 삭제 (참여자 비디오 삭제제)
             if (optionElement) optionElement.remove(); //option 요소 삭제
@@ -977,7 +977,7 @@ const VideoRoom = () =>{
 
             
         } else {
-            console.warn("해당 userId의 참가자가 없습니다:", request.userId);
+            console.warn("해당 userId의 참가자가 없습니다:", request.sessionId);
         }
     };
 
@@ -986,7 +986,7 @@ const VideoRoom = () =>{
         const {roomLeaderId, roomLeaderName} = request;
         setCreatorData({
             ...creatorData,
-            userId: roomLeaderId,
+            sessionId: roomLeaderId,
             userName: roomLeaderName
         });
     };
@@ -1002,7 +1002,7 @@ const VideoRoom = () =>{
 
         const message = {
             eventId: 'videoStateChange',
-            userId: userData.userId,
+            sessionId: userData.sessionId,
             videoOn: newVideoOn
         };
 
@@ -1026,7 +1026,7 @@ const VideoRoom = () =>{
 
         const message = {
             eventId: 'audioStateChange',
-            userId: userData.userId,
+            sessionId: userData.sessionId,
             audioOn: newAudioOn
         };
 
@@ -1040,10 +1040,10 @@ const VideoRoom = () =>{
     };
 
 
-    const updateVideoState = ({ userId, videoOn }) => {
+    const updateVideoState = ({ sessionId, videoOn }) => {
         setParticipants(prev => {
             const updated = { ...prev };
-            const participant = updated[userId];
+            const participant = updated[sessionId];
             if (participant && participant.videoOn !== videoOn) {
                 participant.updateUserVideo(videoOn);
             }
@@ -1051,10 +1051,10 @@ const VideoRoom = () =>{
         });
     };
     
-    const updateAudioState = ({ userId, audioOn }) => {
+    const updateAudioState = ({ sessionId, audioOn }) => {
         setParticipants(prev => {
             const updated = { ...prev };
-            const participant = updated[userId];
+            const participant = updated[sessionId];
             if (participant && participant.audioOn !== audioOn) {
                 participant.updateUserAudio(audioOn);
             }
@@ -1064,7 +1064,7 @@ const VideoRoom = () =>{
 
 
     const toggleScreenShare = async () => {
-        const myUserId = userDataRef.current?.userId;
+        const myUserId = userDataRef.current?.sessionId;
         const participant = participants[myUserId];
         if (!participant || !participant.rtcPeer?.peerConnection) return;
 
@@ -1165,7 +1165,7 @@ const VideoRoom = () =>{
 
         const message = {
             eventId: 'changeName',
-            userId: userData.userId,
+            sessionId: userData.sessionId,
             newName: changeUserName
         };
 
@@ -1179,10 +1179,10 @@ const VideoRoom = () =>{
     }
 
     //변경된 이름 수신
-    const ReceivedChangeName = ({userId, newName}) => {
+    const ReceivedChangeName = ({sessionId, newName}) => {
         setParticipants(prev => {
             const updated = { ...prev };
-            const updatedParticipants = updated[userId];
+            const updatedParticipants = updated[sessionId];
             if (updatedParticipants) {
                 updatedParticipants.updateUserName(newName);
             }
@@ -1234,7 +1234,7 @@ const VideoRoom = () =>{
             streamRef.current = stream;
     
             // 내 참가자 정보 가져오기
-            const myUserId = userDataRef.current?.userId;
+            const myUserId = userDataRef.current?.sessionId;
             const participant = participants[myUserId];
     
             if (!participant) {
@@ -1382,7 +1382,7 @@ const VideoRoom = () =>{
                             {listOpen&&(<div id="userList">
                                 <div className="list-box">
                                     {Object.values(participants).map((participant) => (
-                                    <div key={participant.userId}>
+                                    <div key={participant.sessionId}>
                                         {participant.userName}
                                     </div>
                                     ))}
@@ -1414,7 +1414,7 @@ const VideoRoom = () =>{
                                             {chatMessages.map((msg, index) => (
                                                 <div key={`message-${index}`} className="message">
                                                     <span className="user-profile" id={`profile-${msg.senderId}`} style={{ backgroundColor: generateRandomColor(msg.senderId) }}>{msg.senderName[0]}</span> 
-                                                    <span className="message-box" style={{backgroundColor: msg.senderId === userDataRef.current.userId ? "#DFEBFF" : "white"}}>
+                                                    <span className="message-box" style={{backgroundColor: msg.senderId === userDataRef.current.sessionId ? "#DFEBFF" : "white"}}>
                                                         <p>{msg.senderName}</p>
                                                         {msg.message}
                                                     </span>
@@ -1437,7 +1437,7 @@ const VideoRoom = () =>{
                                     {emojiMessages.map((message, index) => (
                                         <div key={index} className="message">
                                             <span className="user-profile" id={`profile-${message.senderId}`} style={{ backgroundColor: generateRandomColor(message.senderId)}}>{message.senderName[0]} </span>
-                                            <span className="message-box" style={{backgroundColor: message.senderId === userDataRef.current.userId ? "#DFEBFF" : "white"}}>
+                                            <span className="message-box" style={{backgroundColor: message.senderId === userDataRef.current.sessionId ? "#DFEBFF" : "white"}}>
                                                 <p>{message.senderName}</p>
                                                 {/* 이모지 이름에 해당하는 이미지를 찾아서 표시 */}
                                                 {emojis
@@ -1457,10 +1457,10 @@ const VideoRoom = () =>{
                                 <div className="user-select">
                                     <span>수신자: </span>
                                     <select name="user" id="userSelect">
-                                        <option value={chatOn ? "ALL" : userDataRef.current.userId}>{chatOn ? "모두에게" : "나에게"}</option>
+                                        <option value={chatOn ? "ALL" : userDataRef.current.sessionId}>{chatOn ? "모두에게" : "나에게"}</option>
                                         {Object.values(participants).map(participant => (
-                                            participant.userId !== userDataRef.current.userId && (  // 자기자신을 제외
-                                                <option key={participant.userId} value={participant.userId}>
+                                            participant.sessionId !== userDataRef.current.sessionId && (  // 자기자신을 제외
+                                                <option key={participant.sessionId} value={participant.sessionId}>
                                                     {participant.userName}
                                                 </option>
                                             )
