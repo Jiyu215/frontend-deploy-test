@@ -9,7 +9,7 @@ const WaitingRoom = ({action, onDataChange}) => {
   const [stream, setStream] = useState(null);
   const [videoOn, setVideoOn] = useState(true); // 비디오 상태 (처음에는 꺼짐)
   const [audioOn, setAudioOn] = useState(true); // 마이크 상태 (처음에는 꺼짐)
-  const [userName, setUserName] = useState(""); // 이름 상태
+  const [username, setUserName] = useState(""); // 이름 상태
   const [roomId, setRoomId] = useState(""); // 방코드 상태
   const mediaStreamRef = useRef(null); // 비디오 스트림 참조
   
@@ -73,12 +73,12 @@ const WaitingRoom = ({action, onDataChange}) => {
 
   // 방참가 API 호출
   const handleJoin = async() => {
-    if (!userName.trim() && !roomId.trim()) {
+    if (!username.trim() && !roomId.trim()) {
       alert("이름과 방코드를 입력해주세요.");
       return;
     }
 
-    if (!userName.trim()) {
+    if (!username.trim()) {
       alert("이름을 입력해주세요.");
       return;
     }
@@ -88,17 +88,17 @@ const WaitingRoom = ({action, onDataChange}) => {
       return;
     }
 
-    onDataChange({ userName, roomId, videoOn, audioOn });
+    onDataChange({ username, roomId, videoOn, audioOn });
   };
 
   // 방 생성 API 호출
   const handleCreateRoom = async() => {
-    if (!userName.trim()) {
+    if (!username.trim()) {
       alert("이름을 입력해주세요.");
       return;
     }
 
-    onDataChange({ userName, roomId, videoOn, audioOn });
+    onDataChange({ username, roomId, videoOn, audioOn });
   };
 
   // "WebSite Name" 클릭 시 홈 페이지로 이동하는 함수
@@ -118,13 +118,13 @@ const WaitingRoom = ({action, onDataChange}) => {
           <div className="join">
           {action === "create" ? (
               <CreateRoom
-                name={userName}
+                name={username}
                 onNameChange={handleNameChange}
                 onCreate={handleCreateRoom}
               />
             ) : action === "join" ? (
               <JoinRoom
-                name={userName}
+                name={username}
                 roomId={roomId}
                 onNameChange={handleNameChange}
                 onRoomIdChange={handleRoomIdChange}
@@ -153,7 +153,7 @@ const WaitingRoom = ({action, onDataChange}) => {
         <div className="right">
           <div>
             <video ref={mediaStreamRef} autoPlay playsInline />
-            {userName && (<div className="nickname">{userName}</div>)}
+            {username && (<div className="nickname">{username}</div>)}
             {!audioOn && (<div className="audio"><AudioMutedOutlined /></div>)}
           </div>
         </div>
